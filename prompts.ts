@@ -2,6 +2,7 @@ import * as p from "@clack/prompts";
 import stations from "./stations.json";
 import { searchJourneys, type Journey, type JourneySearchResult } from "./journeys";
 import type { FeConfig } from "./fe-config";
+import type { Passenger, PassengerDetails } from "./passengers";
 
 const stationOptions = stations.map((station) => ({
   value: station.code,
@@ -98,4 +99,88 @@ export const promptJourneySelection = async (journeys: Journey[]): Promise<Journ
   }
 
   return journeys[journeyIndex]!;
+};
+
+/**
+ * Prompts for a passenger's details, pre-filling the fields with the given
+ * passenger's data if provided. Exits the process if the user cancels.
+ */
+export const promptPassengerDetails = async (initial?: Passenger): Promise<PassengerDetails> => {
+  const fullName = await p.text({
+    message: "Full name",
+    initialValue: initial?.fullName ?? "",
+    validate: (value) => (!value || value.trim() === "" ? "Full name is required." : undefined),
+  });
+
+  if (p.isCancel(fullName)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  const email = await p.text({
+    message: "Email",
+    initialValue: initial?.email ?? "",
+    validate: (value) => {
+      if (!value || value.trim() === "") return "Email is required.";
+      if (!/^\S+@\S+\.\S+$/.test(value)) return "Enter a valid email address.";
+      return undefined;
+    },
+  });
+
+  if (p.isCancel(email)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  const citizenCardNumber = await p.text({
+    message: "Citizen card number",
+    initialValue: initial?.citizenCardNumber ?? "",
+    validate: (value) => (!value || value.trim() === "" ? "Citizen card number is required." : undefined),
+  });
+
+  if (p.isCancel(citizenCardNumber)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  const greenRailwayPassNumber = await p.text({
+    message: "Green railway pass number",
+    initialValue: initial?.greenRailwayPassNumber ?? "",
+    validate: (value) => (!value || value.trim() === "" ? "Green railway pass number is required." : undefined),
+  });
+
+  if (p.isCancel(greenRailwayPassNumber)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  return { fullName, email, citizenCardNumber, greenRailwayPassNumber };
+};
+
+/**
+ * Prompts the user to pick one passenger from the list. Exits the process
+ * if the user cancels or if there are no passengers to pick from.
+ */
+export const promptPassengerSelection = async (passengers: Passenger[]): Promise<Passenger> => {
+  if (passengers.length === 0) {
+    p.cancel("No passengers registered yet.");
+    process.exit(0);
+  }
+
+  const passengerOptions = passengers.map((passenger) => ({
+    value: passenger.id,
+    label: `${passenger.fullName} (${passenger.email})`,
+  }));
+
+  const passengerId = await p.select({
+    message: "Which passenger would you like to edit?",
+    options: passengerOptions,
+  });
+
+  if (p.isCancel(passengerId)) {
+    p.cancel("Cancelled.");
+    process.exit(0);
+  }
+
+  return passengers.find((passenger) => passenger.id === passengerId)!;
 };

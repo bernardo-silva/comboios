@@ -3,7 +3,8 @@ import { createSale, type SaleLeg } from "./sale";
 import { fetchFeConfig } from "./fe-config";
 import { ApiError, isNoSeatsError } from "./api";
 import { findAvailableSeats } from "./find-seats";
-import { promptJourneySearch, promptJourneySelection } from "./prompts";
+import { promptJourneySearch, promptJourneySelection, promptPassengerDetails, promptPassengerSelection } from "./prompts";
+import { addPassenger, loadPassengers, updatePassenger } from "./passengers";
 
 p.intro("cp");
 
@@ -11,6 +12,7 @@ enum Action {
   BuyTicket = "buy-ticket",
   FindSeats = "find-seats",
   AddPassenger = "add-passenger",
+  EditPassenger = "edit-passenger",
 }
 
 const action = await p.select({
@@ -19,6 +21,7 @@ const action = await p.select({
     { value: Action.BuyTicket, label: "Buy ticket" },
     { value: Action.FindSeats, label: "Find seats" },
     { value: Action.AddPassenger, label: "Add passenger" },
+    { value: Action.EditPassenger, label: "Edit passenger" },
   ],
 });
 
@@ -28,7 +31,20 @@ if (p.isCancel(action)) {
 }
 
 if (action === Action.AddPassenger) {
-  p.outro("Add passenger is not implemented yet.");
+  const details = await promptPassengerDetails();
+  const passenger = await addPassenger(details);
+
+  p.outro(`Added passenger ${passenger.fullName}.`);
+  process.exit(0);
+}
+
+if (action === Action.EditPassenger) {
+  const passengers = await loadPassengers();
+  const existing = await promptPassengerSelection(passengers);
+  const details = await promptPassengerDetails(existing);
+  const passenger = await updatePassenger(existing.id, details);
+
+  p.outro(`Updated passenger ${passenger.fullName}.`);
   process.exit(0);
 }
 
