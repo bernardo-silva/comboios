@@ -73,3 +73,22 @@ export const createSale = async (
     SaleSchema,
     "sale",
   );
+
+/**
+ * Cancels a pending sale created via `createSale`.
+ */
+export const cancelSale = async (saleID: number, feConfig: FeConfig): Promise<void> => {
+  await fetchAndValidate(
+    `https://api-gateway.cp.pt/cp/services/ticketing-api/sale/${saleID}`,
+    {
+      method: "DELETE",
+      headers: {
+        "X-Api-Key": feConfig.ticketingApiKey,
+        "x-cp-connect-id": feConfig.xcck,
+        "x-cp-connect-secret": feConfig.xccs,
+      },
+    },
+    z.object({}).passthrough(),
+    "cancel sale",
+  );
+};

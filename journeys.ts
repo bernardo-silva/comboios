@@ -18,11 +18,18 @@ const ServiceCodeSchema = z.object({
   designation: z.string(),
 });
 
+const TrainStopSchema = z.object({
+  station: StationRefSchema,
+  arrival: z.string(),
+  departure: z.string(),
+});
+
 const TravelSectionSchema = z.object({
   trainNumber: z.number(),
   serviceCode: ServiceCodeSchema,
   departureStation: StationRefSchema,
   arrivalStation: StationRefSchema,
+  trainStops: z.array(TrainStopSchema),
 });
 
 const JourneySchema = z.object({
